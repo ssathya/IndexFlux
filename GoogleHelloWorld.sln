@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.329
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoogleHelloWorld", "GoogleHelloWorld\GoogleHelloWorld.csproj", "{10648385-18FC-4F21-83C9-9B70B72CFD59}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{10648385-18FC-4F21-83C9-9B70B72CFD59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10648385-18FC-4F21-83C9-9B70B72CFD59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10648385-18FC-4F21-83C9-9B70B72CFD59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10648385-18FC-4F21-83C9-9B70B72CFD59}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {45CC8C80-4849-44AA-8B2C-C2FA0DDE8AF7}
+	EndGlobalSection
+EndGlobal
