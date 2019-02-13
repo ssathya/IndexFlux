@@ -70,7 +70,11 @@ namespace AzureGoogleAction.Controllers
 						tradingStatement = $" has a strong { direction } swing; it's current value is  ";
 						break;
 
-					case float n when (n > 1.0):
+					case float n when (n > 1.0 && n < 2.0):
+						tradingStatement = data.change_pct < 0 ? " is having a bad day; it's current value is " : " is having a good day; it's current value is ";
+						break;
+
+					case float n when (n >= 2.0):
 						tradingStatement = data.change_pct < 0 ? " is having a panic attack; it's current value is  " : " is having a blast; it's current value is  ";
 						break;
 
@@ -78,14 +82,15 @@ namespace AzureGoogleAction.Controllers
 						tradingStatement = "";
 						break;
 				}
-				tmpStr.Append($"{data.name}  {tradingStatement}  {Math.Round(data.price)}. \n");
+				tmpStr.Append($"{data.name}  {tradingStatement}  {Math.Round(data.price)}. ");
 				tmpStr.Append(data.day_change > 0 ? " Up by " : "Down by ");
-				tmpStr.Append($"{Math.Round(data.day_change, 0)} points ");
+				tmpStr.Append($"{Math.Round(data.day_change, 0)} points.\n ");
 				tmpStr.Append("\n");
 			}
 
 			return Ok(tmpStr.ToString());
 		}
+
 		#endregion Public Methods
 
 		#region Private Methods
