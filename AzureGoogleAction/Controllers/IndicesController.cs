@@ -1,4 +1,5 @@
 ﻿using AzureGoogleAction.Models;
+using AzureGoogleAction.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -45,50 +46,69 @@ namespace AzureGoogleAction.Controllers
 		[HttpGet]
 		public async Task<IActionResult> Get()
 		{
-			IndexData indexData = await GetIndexQuotes();
+			IndexData indexData;
+			try
+			{
+				 indexData = await GetIndexQuotes();
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError($"Error while executing IndicesController::Get(). Error message \n\t{ex.Message}");
+				var returnStr = GenericEndOfMsg.ErrorReturnMsg();
+				return Ok(returnStr);
+			}
 			if (indexData.Data.Length == 0)
 			{
 				return Ok("Could not get data from remote server");
 			}
+			StringBuilder tmpStr = AnalyzeIndices(indexData);
+			tmpStr.Append(GenericEndOfMsg.EndOfCurrentRequest());
+
+			return Ok(tmpStr.ToString());
+		}
+
+		private static StringBuilder AnalyzeIndices(IndexData indexData)
+		{
 			var tmpStr = new StringBuilder();
 			tmpStr.Append("The markets are doing as follows.\n\t");
 			foreach (var data in indexData.Data)
 			{
-				string tradingStatement;
+				//string tradingStatement = data.change_pct >= 0 ? "is up " : "is down ";
 				string direction = data.change_pct < 0 ? "downward" : "upward";
-				switch (Math.Abs(data.change_pct))
-				{
-					case float n when (n <= 0.2):
-						tradingStatement = " trading water; it's current value is  ";
-						break;
+				//switch (Math.Abs(data.change_pct))
+				//{
+				//	case float n when (n <= 0.2):
+				//		tradingStatement = " trading water; it's current value is  ";
+				//		break;
 
-					case float n when (n > 0.2 && n <= 0.5):
-						tradingStatement = $" has a moderate { direction } swing; it's current value is   ";
-						break;
+				//	case float n when (n > 0.2 && n <= 0.5):
+				//		tradingStatement = $" has a moderate { direction } swing; it's current value is   ";
+				//		break;
 
-					case float n when (n > 0.5 && n <= 1.0):
-						tradingStatement = $" has a strong { direction } swing; it's current value is  ";
-						break;
+				//	case float n when (n > 0.5 && n <= 1.0):
+				//		tradingStatement = $" has a strong { direction } swing; it's current value is  ";
+				//		break;
 
-					case float n when (n > 1.0 && n < 2.0):
-						tradingStatement = data.change_pct < 0 ? " is having a bad day; it's current value is " : " is having a good day; it's current value is ";
-						break;
+				//	case float n when (n > 1.0 && n < 2.0):
+				//		tradingStatement = data.change_pct < 0 ? " is having a bad day; it's current value is " : " is having a good day; it's current value is ";
+				//		break;
 
-					case float n when (n >= 2.0):
-						tradingStatement = data.change_pct < 0 ? " is having a panic attack; it's current value is  " : " is having a blast; it's current value is  ";
-						break;
+				//	case float n when (n >= 2.0):
+				//		tradingStatement = data.change_pct < 0 ? " is having a panic attack; it's current value is  " : " is having a blast; it's current value is  ";
+				//		break;
 
-					default:
-						tradingStatement = "";
-						break;
-				}
-				tmpStr.Append($"{data.name}  {tradingStatement}  {Math.Round(data.price)}. ");
+				//	default:
+				//		tradingStatement = "";
+				//		break;
+				//}
+				tmpStr.Append($"{data.name}  is at  {Math.Round(data.price,0)}. ");
 				tmpStr.Append(data.day_change > 0 ? " Up by " : "Down by ");
-				tmpStr.Append($"{Math.Round(data.day_change, 0)} points.\n ");
-				tmpStr.Append("\n");
+				tmpStr.Append($"{Math.Abs(Math.Round(data.day_change, 0))} points.\n ");
+				tmpStr.Append("\n");				
+
 			}
 
-			return Ok(tmpStr.ToString());
+			return tmpStr;
 		}
 
 		#endregion Public Methods
