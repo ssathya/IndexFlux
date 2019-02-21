@@ -48,8 +48,10 @@ namespace AzureGoogleAction.Controllers
 			urlToUse = BuildUrlToUse(parameter, urlToUse, out string readableParameter);
 			if (string.IsNullOrWhiteSpace(urlToUse))
 			{
-				return BadRequest("Unsupported action parameter");
+				var returnStr = "Unsupported action parameter" + GenericEndOfMsg.ErrorReturnMsg();
+				return Ok(returnStr);
 			}
+
 			string data;
 			try
 			{
@@ -64,6 +66,7 @@ namespace AzureGoogleAction.Controllers
 					finalOutput.Append(trend.CompanyName + ", ");
 				}
 				finalOutput.Replace(" Inc.", " ");
+				finalOutput.Replace(" Corporation", "");
 				data = readableParameter + " for the day are " + finalOutput.ToString() + GenericEndOfMsg.EndOfCurrentRequest();
 				return Ok(data);
 			}

@@ -9,7 +9,7 @@ namespace AzureGoogleAction.Utils
 	{
 		internal static string EndOfCurrentRequest()
 		{
-			return "\nAnything more? Or you can ask 'help' or say 'bye bye' to quit\n";
+			return "\nAnything more? For help say `help` or say 'bye bye' to quit\n";
 		}
 		internal static string ErrorReturnMsg()
 		{

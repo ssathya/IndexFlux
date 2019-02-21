@@ -57,9 +57,11 @@ namespace AzureGoogleAction.Controllers
 				var returnStr = GenericEndOfMsg.ErrorReturnMsg();
 				return Ok(returnStr);
 			}
-			if (indexData.Data.Length == 0)
+			if (indexData.Data == null || indexData.Data.Length == 0)
 			{
-				return Ok("Could not get data from remote server");
+				var returnValue = "Could not get data from remote server" +
+					GenericEndOfMsg.ErrorReturnMsg();
+				return Ok(returnValue);
 			}
 			StringBuilder tmpStr = AnalyzeIndices(indexData);
 			tmpStr.Append(GenericEndOfMsg.EndOfCurrentRequest());
