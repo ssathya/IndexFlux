@@ -45,7 +45,7 @@ namespace IndexFlux.Responses
 			{
 				var parserResult = JObject.Parse(requestBody);
 				GetAttribute(parserResult, IntentPath, out intentName);
-				returnValue = await ProcessIntent(intentName, parserResult);
+				returnValue = await ProcessIntent(intentName, parserResult, log);
 			}
 			catch (Exception ex)
 			{
@@ -57,7 +57,10 @@ namespace IndexFlux.Responses
 					StatusCode = 200
 				};
 			}
-
+			if (!returnValue.FulfillmentText.Contains(@"'bye bye' to quit"))
+			{
+				returnValue.FulfillmentText = returnValue.FulfillmentText + "\n" + GenericEndOfMsg.EndOfCurrentRequest();
+			}
 			log.LogInformation("C# HTTP trigger function processed a request.");
 			var returnString = JsonConvert.SerializeObject(returnValue,
 				Formatting.Indented,
@@ -82,7 +85,7 @@ namespace IndexFlux.Responses
 			outString = requestBody.SelectToken(queryPath).Value<string>();
 		}
 
-		private static async Task<WebhookResponse> ProcessIntent(string intentName, JObject parserResult)
+		private static async Task<WebhookResponse> ProcessIntent(string intentName, JObject parserResult, ILogger log)
 		{
 
 			WebhookResponse returnValue = new WebhookResponse
@@ -92,10 +95,17 @@ namespace IndexFlux.Responses
 			switch (intentName)
 			{
 				case "marketSummary":
-					var msActor = new ObtainMarterSummary();
+					var msActor = new ObtainMarketSummary(log);
 					returnValue = await msActor.GetIndicesValuesAsync(parserResult);
 					break;
-
+				case "marketTrends":
+					var mtActor = new ObtainTrenders(log);
+					returnValue = await mtActor.GetTrendingAsync(parserResult);
+					break;
+				case "newsFetch":
+					var newsActor = new ObtainNews(log);
+					returnValue = await newsActor.GetExternalNews(parserResult);
+					break;
 				default:
 					break;
 			}
