@@ -261,3 +261,4 @@ __pycache__/
 *.pyc
 /AzureGoogleAction/appsettings.Development.json
 /GoogleMvcAPI/appsettings.Development.json
+/IndexFlux/Properties/launchSettings.json

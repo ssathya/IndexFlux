@@ -1,66 +1,79 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
+using Google.Cloud.Dialogflow.V2;
+using IndexFlux.Utils;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Google.Cloud.Dialogflow.V2;
-using IndexFlux.Utils;
+using Newtonsoft.Json.Serialization;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace IndexFlux.Responses
 {
-    public static class ParentFunction
-    {
-
+	public static class ParentFunction
+	{
 		#region Private Fields
 
 		private const string IntentPath = @"$..displayName";
 
 		#endregion Private Fields
 
-
 		#region Public Methods
 
 		[FunctionName("ParentFunction")]
-        public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
-            ILogger log)
-        {
+		public static async Task<IActionResult> Run(
+			[HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+			ILogger log)
+		{
 			string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
 			string intentName = "";
-			WebhookResponse returnValue;
+			WebhookResponse returnValue = new WebhookResponse
+			{
+				FulfillmentText = GenericEndOfMsg.ErrorReturnMsg()
+			};
+			var retrunErrorString = JsonConvert.SerializeObject(returnValue,
+				Formatting.Indented,
+				new JsonSerializerSettings
+				{
+					ContractResolver = new CamelCasePropertyNamesContractResolver()
+				});
 			try
 			{
 				var parserResult = JObject.Parse(requestBody);
 				GetAttribute(parserResult, IntentPath, out intentName);
-				returnValue = ProcessIntent(intentName, parserResult, out bool success);
-
+				returnValue = await ProcessIntent(intentName, parserResult);
 			}
-			catch (Exception )
+			catch (Exception ex)
 			{
-
-				throw;
+				log.LogError($"Exception while running ParentFunction\nDetails:{ex.Message}");
+				return new ContentResult
+				{
+					Content = retrunErrorString,
+					ContentType = "application/json",
+					StatusCode = 200
+				};
 			}
 
 			log.LogInformation("C# HTTP trigger function processed a request.");
-
-            string name = req.Query["name"];
-
-            
-            dynamic data = JsonConvert.DeserializeObject(requestBody);
-            name = name ?? data?.name;
-
-            return name != null
-                ? (ActionResult)new OkObjectResult($"Hello, {name}")
-                : new BadRequestObjectResult("Please pass a name on the query string or in the request body");
+			var returnString = JsonConvert.SerializeObject(returnValue,
+				Formatting.Indented,
+				new JsonSerializerSettings
+				{
+					ContractResolver = new CamelCasePropertyNamesContractResolver()
+				});
+			return new ContentResult
+			{
+				Content = returnString,
+				ContentType = "application/json",
+				StatusCode = 200
+			};
 		}
 
 		#endregion Public Methods
-
 
 		#region Private Methods
 
@@ -69,9 +82,9 @@ namespace IndexFlux.Responses
 			outString = requestBody.SelectToken(queryPath).Value<string>();
 		}
 
-		private static WebhookResponse ProcessIntent(string intentName, JObject parserResult, out bool success)
+		private static async Task<WebhookResponse> ProcessIntent(string intentName, JObject parserResult)
 		{
-			success = false;
+
 			WebhookResponse returnValue = new WebhookResponse
 			{
 				FulfillmentText = GenericEndOfMsg.ErrorReturnMsg()
@@ -79,7 +92,10 @@ namespace IndexFlux.Responses
 			switch (intentName)
 			{
 				case "marketSummary":
+					var msActor = new ObtainMarterSummary();
+					returnValue = await msActor.GetIndicesValuesAsync(parserResult);
 					break;
+
 				default:
 					break;
 			}
