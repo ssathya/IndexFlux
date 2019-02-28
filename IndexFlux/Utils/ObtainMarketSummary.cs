@@ -71,6 +71,11 @@ namespace IndexFlux.Utils
 			}
 			if (string.IsNullOrWhiteSpace(apiKey))
 			{
+				_logger.LogDebug("Did not find api key in Machine");
+				apiKey = Environment.GetEnvironmentVariable("WorldTradingDataKey");
+			}
+			if (string.IsNullOrWhiteSpace(apiKey))
+			{
 				_logger.LogError("Did not find api key; calls will fail");
 			}
 				string urlStr = $@"https://www.worldtradingdata.com/api/v1/stock?symbol={tickersToUse}&api_token={apiKey}";
@@ -92,8 +97,7 @@ namespace IndexFlux.Utils
 				string direction = idxData.change_pct < 0 ? "downward" : "upward";
 				tmpStr.Append($"{idxData.name}  is at  {Math.Round(idxData.price, 0)}. ");
 				tmpStr.Append(idxData.day_change > 0 ? " Up by " : "Down by ");
-				tmpStr.Append($"{Math.Abs(Math.Round(idxData.day_change, 0))} points.\n ");
-				tmpStr.Append("\n");
+				tmpStr.Append($"{Math.Abs(Math.Round(idxData.day_change, 0))} points.\n ");				
 			}			
 			var returnValue = new WebhookResponse
 			{

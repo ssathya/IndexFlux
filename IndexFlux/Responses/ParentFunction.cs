@@ -10,6 +10,8 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace IndexFlux.Responses
@@ -24,6 +26,16 @@ namespace IndexFlux.Responses
 
 		#region Public Methods
 
+		/// <summary>
+		/// Runs the specified req.
+		/// </summary>
+		/// <param name="req">
+		/// The req.
+		/// </param>
+		/// <param name="log">
+		/// The log.
+		/// </param>
+		/// <returns></returns>
 		[FunctionName("ParentFunction")]
 		public static async Task<IActionResult> Run(
 			[HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
@@ -61,6 +73,7 @@ namespace IndexFlux.Responses
 			{
 				returnValue.FulfillmentText = returnValue.FulfillmentText + "\n" + GenericEndOfMsg.EndOfCurrentRequest();
 			}
+			returnValue.FulfillmentText = ConvertAllToASCII(returnValue.FulfillmentText);
 			log.LogInformation("C# HTTP trigger function processed a request.");
 			var returnString = JsonConvert.SerializeObject(returnValue,
 				Formatting.Indented,
@@ -80,14 +93,42 @@ namespace IndexFlux.Responses
 
 		#region Private Methods
 
+		/// <summary>
+		/// Converts all to ASCII.
+		/// </summary>
+		/// <param name="inString">
+		/// The in string.
+		/// </param>
+		/// <returns></returns>
+		private static string ConvertAllToASCII(string inString)
+		{
+			var newStringBuilder = new StringBuilder();
+			newStringBuilder.Append(inString.Normalize(NormalizationForm.FormKD)
+											.Where(x => x < 128)
+											.ToArray());
+			return newStringBuilder.ToString();
+		}
+
 		private static void GetAttribute(JObject requestBody, string queryPath, out string outString)
 		{
 			outString = requestBody.SelectToken(queryPath).Value<string>();
 		}
 
+		/// <summary>
+		/// Processes the intent.
+		/// </summary>
+		/// <param name="intentName">
+		/// Name of the intent.
+		/// </param>
+		/// <param name="parserResult">
+		/// The parser result.
+		/// </param>
+		/// <param name="log">
+		/// The log.
+		/// </param>
+		/// <returns></returns>
 		private static async Task<WebhookResponse> ProcessIntent(string intentName, JObject parserResult, ILogger log)
 		{
-
 			WebhookResponse returnValue = new WebhookResponse
 			{
 				FulfillmentText = GenericEndOfMsg.ErrorReturnMsg()
@@ -98,21 +139,23 @@ namespace IndexFlux.Responses
 					var msActor = new ObtainMarketSummary(log);
 					returnValue = await msActor.GetIndicesValuesAsync(parserResult);
 					break;
+
 				case "marketTrends":
 					var mtActor = new ObtainTrenders(log);
 					returnValue = await mtActor.GetTrendingAsync(parserResult);
 					break;
+
 				case "newsFetch":
 					var newsActor = new ObtainNews(log);
 					returnValue = await newsActor.GetExternalNews(parserResult);
 					break;
+
 				default:
 					break;
 			}
 
 			return returnValue;
 		}
-
 		#endregion Private Methods
 	}
 }
