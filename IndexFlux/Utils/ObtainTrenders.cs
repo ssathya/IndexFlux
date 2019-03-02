@@ -47,7 +47,7 @@ namespace IndexFlux.Utils
 			{
 				return new WebhookResponse
 				{
-					FulfillmentText = GenericEndOfMsg.ErrorReturnMsg()
+					FulfillmentText = Utilities.ErrorReturnMsg()
 				};
 			}
 			string outputMsg = await GetIexTradingDataAsync(urlToUse, readableParameter);

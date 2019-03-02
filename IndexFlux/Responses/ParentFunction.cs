@@ -45,7 +45,7 @@ namespace IndexFlux.Responses
 			string intentName = "";
 			WebhookResponse returnValue = new WebhookResponse
 			{
-				FulfillmentText = GenericEndOfMsg.ErrorReturnMsg()
+				FulfillmentText = Utilities.ErrorReturnMsg()
 			};
 			var retrunErrorString = JsonConvert.SerializeObject(returnValue,
 				Formatting.Indented,
@@ -71,16 +71,17 @@ namespace IndexFlux.Responses
 			}
 			if (!returnValue.FulfillmentText.Contains(@"'bye bye' to quit"))
 			{
-				returnValue.FulfillmentText = returnValue.FulfillmentText + "\n" + GenericEndOfMsg.EndOfCurrentRequest();
+				returnValue.FulfillmentText = returnValue.FulfillmentText + "\n" + Utilities.EndOfCurrentRequest();
 			}
-			returnValue.FulfillmentText = ConvertAllToASCII(returnValue.FulfillmentText);
+			returnValue.FulfillmentText = Utilities.ConvertAllToASCII(returnValue.FulfillmentText);
 			log.LogInformation("C# HTTP trigger function processed a request.");
-			var returnString = JsonConvert.SerializeObject(returnValue,
-				Formatting.Indented,
-				new JsonSerializerSettings
-				{
-					ContractResolver = new CamelCasePropertyNamesContractResolver()
-				});
+			//var returnString = JsonConvert.SerializeObject(returnValue,
+			//	Formatting.Indented,
+			//	new JsonSerializerSettings
+			//	{
+			//		ContractResolver = new CamelCasePropertyNamesContractResolver()
+			//	});
+			var returnString = returnValue.ToString();
 			return new ContentResult
 			{
 				Content = returnString,
@@ -93,21 +94,7 @@ namespace IndexFlux.Responses
 
 		#region Private Methods
 
-		/// <summary>
-		/// Converts all to ASCII.
-		/// </summary>
-		/// <param name="inString">
-		/// The in string.
-		/// </param>
-		/// <returns></returns>
-		private static string ConvertAllToASCII(string inString)
-		{
-			var newStringBuilder = new StringBuilder();
-			newStringBuilder.Append(inString.Normalize(NormalizationForm.FormKD)
-											.Where(x => x < 128)
-											.ToArray());
-			return newStringBuilder.ToString();
-		}
+		
 
 		private static void GetAttribute(JObject requestBody, string queryPath, out string outString)
 		{
@@ -131,7 +118,7 @@ namespace IndexFlux.Responses
 		{
 			WebhookResponse returnValue = new WebhookResponse
 			{
-				FulfillmentText = GenericEndOfMsg.ErrorReturnMsg()
+				FulfillmentText = Utilities.ErrorReturnMsg()
 			};
 			switch (intentName)
 			{

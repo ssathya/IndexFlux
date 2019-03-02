@@ -91,13 +91,18 @@ namespace IndexFlux.Utils
 		private WebhookResponse BuildOutputMessage(IndexData indexData)
 		{
 			StringBuilder tmpStr = new StringBuilder();
-			tmpStr.Append("The markets are doing as follows.\n");
+			if (indexData.Data.Length >= 1)
+			{
+				var dateToUse = indexData.Data[0].last_trade_time;
+				tmpStr.Append("As of ");
+				tmpStr.Append($"{dateToUse.ToString("MMMM dd, hh:mm tt")} EST ");
+			}					
 			foreach (var idxData in indexData.Data)
 			{
 				string direction = idxData.change_pct < 0 ? "downward" : "upward";
 				tmpStr.Append($"{idxData.name}  is at  {Math.Round(idxData.price, 0)}. ");
 				tmpStr.Append(idxData.day_change > 0 ? " Up by " : "Down by ");
-				tmpStr.Append($"{Math.Abs(Math.Round(idxData.day_change, 0))} points.\n ");				
+				tmpStr.Append($"{Math.Abs(Math.Round(idxData.day_change, 0))} points.\n\n ");				
 			}			
 			var returnValue = new WebhookResponse
 			{

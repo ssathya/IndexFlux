@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using static Google.Cloud.Dialogflow.V2.Intent.Types;
+using static Google.Cloud.Dialogflow.V2.Intent.Types.Message.Types.BasicCard.Types;
 
 namespace IndexFlux.Utils
 {
@@ -50,10 +52,44 @@ namespace IndexFlux.Utils
 			urlToUse = BuildUrlToUse(newsSourceRequested, urlToUse, out string readableParameter);
 			NewsExtract extracts = await ObtainNewAPIDta(urlToUse);
 			string returnString = ExtractHeadlines(extracts);
-			return new WebhookResponse
+			
+			var returnValue = new WebhookResponse
 			{
 				FulfillmentText = returnString
 			};
+			returnValue = ExtractHeadlines(extracts, returnValue);
+			return returnValue;
+		}
+
+		private WebhookResponse ExtractHeadlines(NewsExtract extracts, WebhookResponse returnValue)
+		{
+			foreach (var article in extracts.articles)
+			{
+				
+				var button = new Message.Types.Card.Types.Button
+				{
+					Text = article.source.name,
+					Postback = article.url
+					//Title = article.source.name,
+					//OpenUriAction = new Button.Types.OpenUriAction
+					//{
+					//	Uri = article.url
+					//}
+				};
+				var ffMessage = new Message
+				{
+					
+					Card = new Message.Types.Card
+					{
+						Title = Utilities.ConvertAllToASCII(article.title),
+						Subtitle = Utilities.ConvertAllToASCII(article.description),
+						ImageUri = article.urlToImage,						
+					}					
+				};
+				ffMessage.Card.Buttons.Add(button);
+				returnValue.FulfillmentMessages.Add(ffMessage);
+			}
+			return returnValue;
 		}
 
 		#endregion Internal Methods
