@@ -1,4 +1,5 @@
 using Google.Cloud.Dialogflow.V2;
+using Google.Protobuf;
 using IndexFlux.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,8 @@ namespace IndexFlux.Responses
 		#region Private Fields
 
 		private const string IntentPath = @"$..displayName";
-
+		private static readonly JsonParser jsonParser =
+		new JsonParser(JsonParser.Settings.Default.WithIgnoreUnknownFields(true));
 		#endregion Private Fields
 
 		#region Public Methods
@@ -53,11 +55,14 @@ namespace IndexFlux.Responses
 				{
 					ContractResolver = new CamelCasePropertyNamesContractResolver()
 				});
+			WebhookRequest webhookRequest;
 			try
 			{
 				var parserResult = JObject.Parse(requestBody);
+				webhookRequest = jsonParser.Parse<WebhookRequest>(requestBody);
+
 				GetAttribute(parserResult, IntentPath, out intentName);
-				returnValue = await ProcessIntent(intentName, parserResult, log);
+				returnValue = await ProcessIntent(intentName, parserResult, webhookRequest, log);
 			}
 			catch (Exception ex)
 			{
@@ -69,11 +74,13 @@ namespace IndexFlux.Responses
 					StatusCode = 200
 				};
 			}
-			if (!returnValue.FulfillmentText.Contains(@"'bye bye' to quit"))
+			if (returnValue.FulfillmentMessages.Count == 0 &&
+				!returnValue.FulfillmentText.Contains(@"'bye bye' to quit"))
 			{
 				returnValue.FulfillmentText = returnValue.FulfillmentText + "\n" + Utilities.EndOfCurrentRequest();
-			}
-			returnValue.FulfillmentText = Utilities.ConvertAllToASCII(returnValue.FulfillmentText);
+			}			
+			returnValue.FulfillmentText = Utilities.ConvertAllToASCII(returnValue.FulfillmentText);			
+			returnValue.Source = webhookRequest.QueryResult.WebhookSource;
 			log.LogInformation("C# HTTP trigger function processed a request.");
 			//var returnString = JsonConvert.SerializeObject(returnValue,
 			//	Formatting.Indented,
@@ -82,6 +89,7 @@ namespace IndexFlux.Responses
 			//		ContractResolver = new CamelCasePropertyNamesContractResolver()
 			//	});
 			var returnString = returnValue.ToString();
+			log.LogInformation(returnString);
 			return new ContentResult
 			{
 				Content = returnString,
@@ -114,26 +122,27 @@ namespace IndexFlux.Responses
 		/// The log.
 		/// </param>
 		/// <returns></returns>
-		private static async Task<WebhookResponse> ProcessIntent(string intentName, JObject parserResult, ILogger log)
+		private static async Task<WebhookResponse> ProcessIntent(string intentName, JObject parserResult, WebhookRequest webhookRequest, ILogger log)
 		{
 			WebhookResponse returnValue = new WebhookResponse
 			{
 				FulfillmentText = Utilities.ErrorReturnMsg()
 			};
-			switch (intentName)
+			
+			switch (webhookRequest.QueryResult.Intent.DisplayName)
 			{
 				case "marketSummary":
-					var msActor = new ObtainMarketSummary(log);
+					var msActor = new ObtainMarketSummary(webhookRequest, log);
 					returnValue = await msActor.GetIndicesValuesAsync(parserResult);
 					break;
 
 				case "marketTrends":
-					var mtActor = new ObtainTrenders(log);
+					var mtActor = new ObtainTrenders(webhookRequest, log);
 					returnValue = await mtActor.GetTrendingAsync(parserResult);
 					break;
 
 				case "newsFetch":
-					var newsActor = new ObtainNews(log);
+					var newsActor = new ObtainNews(webhookRequest, log);
 					returnValue = await newsActor.GetExternalNews(parserResult);
 					break;
 

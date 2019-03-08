@@ -19,15 +19,17 @@ namespace IndexFlux.Utils
 		private const string EntityTrendParameter = "trendParameter";
 		private const string TokenPath = @"$.*.parameters";
 		private readonly ILogger _logger;
+		private readonly WebhookRequest _webhookRequest;
 
 		#endregion Private Fields
 
 
 		#region Public Constructors
 
-		public ObtainTrenders(ILogger log)
+		public ObtainTrenders(WebhookRequest webhookRequest, ILogger log)
 		{
 			_logger = log;
+			_webhookRequest = webhookRequest;
 		}
 
 		#endregion Public Constructors

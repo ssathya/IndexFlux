@@ -17,15 +17,17 @@ namespace IndexFlux.Utils
 		#region Private Fields
 
 		private readonly ILogger _logger;
+		private readonly WebhookRequest _webhookRequest;
 
 		#endregion Private Fields
 
 
 		#region Public Constructors
 
-		public ObtainMarketSummary(ILogger log)
+		public ObtainMarketSummary(WebhookRequest webhookRequest, ILogger log)
 		{
 			_logger = log;
+			_webhookRequest = webhookRequest;
 		}
 
 		#endregion Public Constructors

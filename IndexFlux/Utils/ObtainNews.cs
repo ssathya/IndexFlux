@@ -21,15 +21,17 @@ namespace IndexFlux.Utils
 		private const string newsParameter = "newsSource";
 		private const string ParametersPath = @"$.*.parameters";
 		private readonly ILogger _logger;
+		private readonly WebhookRequest _webhookRequest;
 
 		#endregion Private Fields
 
 
 		#region Public Constructors
 
-		public ObtainNews(ILogger log)
+		public ObtainNews(WebhookRequest webhookRequest, ILogger log)
 		{
 			_logger = log;
+			_webhookRequest = webhookRequest;
 		}
 
 		#endregion Public Constructors
@@ -55,42 +57,59 @@ namespace IndexFlux.Utils
 			
 			var returnValue = new WebhookResponse
 			{
-				FulfillmentText = returnString
+				FulfillmentText = returnString				
 			};
-			returnValue = ExtractHeadlines(extracts, returnValue);
+			// returnValue = ExtractHeadlines(extracts, returnValue);
+			
 			return returnValue;
 		}
 
 		private WebhookResponse ExtractHeadlines(NewsExtract extracts, WebhookResponse returnValue)
 		{
+			var strBuffer = new StringBuilder();
 			foreach (var article in extracts.articles)
 			{
-				
+				strBuffer.AppendLine(article.title);
+			}
+			strBuffer.AppendLine(Utilities.EndOfCurrentRequest());
+			string ssmlMsg = Utilities.ConvertToSSML(strBuffer.ToString());
+			var sr = new Message.Types.SimpleResponse
+			{
+				Ssml = ssmlMsg,
+				DisplayText = strBuffer.ToString()
+			};
+			var srs = new Message.Types.SimpleResponses();
+			srs.SimpleResponses_.Add(sr);
+			var simpleResponses = new Message
+			{
+				SimpleResponses = srs
+			};
+			Utilities.PlaceStandardHeaders(returnValue);
+			returnValue.FulfillmentMessages.Add(simpleResponses);
+			foreach (var article in extracts.articles)
+			{
+
 				var button = new Message.Types.Card.Types.Button
 				{
 					Text = article.source.name,
 					Postback = article.url
-					//Title = article.source.name,
-					//OpenUriAction = new Button.Types.OpenUriAction
-					//{
-					//	Uri = article.url
-					//}
 				};
 				var ffMessage = new Message
 				{
-					
 					Card = new Message.Types.Card
 					{
 						Title = Utilities.ConvertAllToASCII(article.title),
 						Subtitle = Utilities.ConvertAllToASCII(article.description),
-						ImageUri = article.urlToImage,						
-					}					
+						ImageUri = article.urlToImage,
+					}
 				};
 				ffMessage.Card.Buttons.Add(button);
-				returnValue.FulfillmentMessages.Add(ffMessage);
+				//returnValue.FulfillmentMessages.Add(ffMessage);
 			}
 			return returnValue;
 		}
+
+		
 
 		#endregion Internal Methods
 
