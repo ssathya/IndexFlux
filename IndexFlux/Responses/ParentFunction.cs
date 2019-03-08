@@ -145,7 +145,10 @@ namespace IndexFlux.Responses
 					var newsActor = new ObtainNews(webhookRequest, log);
 					returnValue = await newsActor.GetExternalNews(parserResult);
 					break;
-
+				case "stockQuote":
+					var stockQuoteActor = new ObtainStockQuotes(webhookRequest, log);
+					returnValue = await stockQuoteActor.GetExternalQuotesAsync();
+					break;
 				default:
 					break;
 			}
