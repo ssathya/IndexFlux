@@ -72,10 +72,10 @@ namespace IndexFlux.Utils
 			reportingDate = TimeZoneInfo.ConvertTimeFromUtc(reportingDate, tzInfo);
 			outMsg.Append("As of ");
 			outMsg.Append($"{reportingDate.ToString("MMMM dd, hh:mm tt")} EST ");
-			outMsg.Append($"{stockRTD.CompanyName} traded ");
+			outMsg.Append($"{stockRTD.CompanyName} is at {stockRTD.LatestPrice};");
 			outMsg.Append(stockRTD.Change >= 0 ? " up by " : " down by ");
 			outMsg.Append($"{ Math.Abs(stockRTD.Change)} points.\n");
-			outMsg.Append($"Its last trade was at {stockRTD.LatestPrice}.\n");
+			
 			outMsg.Append($"Days range was between {stockRTD.Low} and {stockRTD.High}.\n");
 			return outMsg.ToString();
 		}
