@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureGoogleAction", "AzureG
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IndexFlux", "IndexFlux\IndexFlux.csproj", "{88A924E1-ADB6-4434-839E-164590B9E82F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtractCompanyList", "ExtractCompanyList\ExtractCompanyList.csproj", "{0A25B507-1A6F-4233-9BB4-670E2D00CEC6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExtractCompanyList", "ExtractCompanyList\ExtractCompanyList.csproj", "{0A25B507-1A6F-4233-9BB4-670E2D00CEC6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
