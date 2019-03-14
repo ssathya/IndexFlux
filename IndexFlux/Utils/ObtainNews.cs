@@ -8,13 +8,13 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using static Google.Cloud.Dialogflow.V2.Intent.Types;
-using static Google.Cloud.Dialogflow.V2.Intent.Types.Message.Types.BasicCard.Types;
+using static Google.Cloud.Dialogflow.V2.Intent.Types.Message.Types;
 
 namespace IndexFlux.Utils
 {
 	public class ObtainNews
 	{
+
 
 		#region Private Fields
 
@@ -36,7 +36,6 @@ namespace IndexFlux.Utils
 
 		#endregion Public Constructors
 
-
 		#region Internal Methods
 
 		/// <summary>
@@ -54,62 +53,15 @@ namespace IndexFlux.Utils
 			urlToUse = BuildUrlToUse(newsSourceRequested, urlToUse, out string readableParameter);
 			NewsExtract extracts = await ObtainNewAPIDta(urlToUse);
 			string returnString = ExtractHeadlines(extracts);
-			
+
 			var returnValue = new WebhookResponse
 			{
-				FulfillmentText = returnString				
+				FulfillmentText = returnString
 			};
-			// returnValue = ExtractHeadlines(extracts, returnValue);
-			
+			returnValue = ExtractHeadlines(extracts, returnValue);
+
 			return returnValue;
 		}
-
-		private WebhookResponse ExtractHeadlines(NewsExtract extracts, WebhookResponse returnValue)
-		{
-			var strBuffer = new StringBuilder();
-			foreach (var article in extracts.articles)
-			{
-				strBuffer.AppendLine(article.title);
-			}
-			strBuffer.AppendLine(Utilities.EndOfCurrentRequest());
-			string ssmlMsg = Utilities.ConvertToSSML(strBuffer.ToString());
-			var sr = new Message.Types.SimpleResponse
-			{
-				Ssml = ssmlMsg,
-				DisplayText = strBuffer.ToString()
-			};
-			var srs = new Message.Types.SimpleResponses();
-			srs.SimpleResponses_.Add(sr);
-			var simpleResponses = new Message
-			{
-				SimpleResponses = srs
-			};
-			Utilities.PlaceStandardHeaders(returnValue);
-			returnValue.FulfillmentMessages.Add(simpleResponses);
-			foreach (var article in extracts.articles)
-			{
-
-				var button = new Message.Types.Card.Types.Button
-				{
-					Text = article.source.name,
-					Postback = article.url
-				};
-				var ffMessage = new Message
-				{
-					Card = new Message.Types.Card
-					{
-						Title = Utilities.ConvertAllToASCII(article.title),
-						Subtitle = Utilities.ConvertAllToASCII(article.description),
-						ImageUri = article.urlToImage,
-					}
-				};
-				ffMessage.Card.Buttons.Add(button);
-				//returnValue.FulfillmentMessages.Add(ffMessage);
-			}
-			return returnValue;
-		}
-
-		
 
 		#endregion Internal Methods
 
@@ -148,6 +100,21 @@ namespace IndexFlux.Utils
 			return urlStr;
 		}
 
+		private WebhookResponse ExtractHeadlines(NewsExtract extracts, WebhookResponse returnValue)
+		{
+			returnValue = new WebhookResponse();
+			var headlines = ExtractHeadlines(extracts);
+			headlines += Utilities.EndOfCurrentRequest();
+			headlines = Utilities.ConvertAllToASCII(headlines);
+			var textMsg = new Text();
+			textMsg.Text_.Add(headlines);
+			var simpleResponses = new SimpleResponses();
+			var simpleResponse = Utilities.BuildTextToSpeech(headlines);
+			simpleResponses.SimpleResponses_.Add(simpleResponse);			
+			returnValue.FulfillmentMessages.Add(new Intent.Types.Message { SimpleResponses = simpleResponses, Platform = Platform.ActionsOnGoogle });
+			returnValue.FulfillmentMessages.Add(new Intent.Types.Message { Text = textMsg });
+			return returnValue;
+		}
 		private string ExtractHeadlines(NewsExtract extracts)
 		{
 			var returnMsg = new StringBuilder();
@@ -204,5 +171,6 @@ namespace IndexFlux.Utils
 		}
 
 		#endregion Private Methods
+
 	}
 }

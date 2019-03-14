@@ -60,27 +60,47 @@ namespace IndexFlux.Utils
 		}
 
 		public static SimpleResponse BuildTextToSpeech(string textToConvert)
-		{
-			var ssmlText = new StringBuilder();
-			ssmlText.Append("<speak>\n");
-			var modifiedInput = textToConvert.Replace("\n", @"<break strength=""weak"" time=""300ms""/>");
-			ssmlText.Append(modifiedInput + "\n");
-			ssmlText.Append("</speak>\n");
-			var element = XElement.Parse(ssmlText.ToString());
-			var settings = new XmlWriterSettings();
-			settings.OmitXmlDeclaration = true;
-			settings.Indent = true;
-			settings.NewLineOnAttributes = true;
-			var beautySSML = new StringBuilder();
+		{			
+			var settings = new XmlWriterSettings
+			{
+				OmitXmlDeclaration = true,
+				Indent = true,
+				NewLineOnAttributes = true,
+				NewLineHandling = NewLineHandling.Replace
+			};
+			var beautySSML = new StringBuilder();												
+			var modifiedInput = Regex.Replace(textToConvert, @"\r\n?|\n|\\n|\\r\\n", @"zyxwvu");
+			beautySSML.Clear();
+			settings.NewLineOnAttributes = false;
 			using (var xmlWriter = XmlWriter.Create(beautySSML, settings))
 			{
-				element.Save(xmlWriter);
+				xmlWriter.WriteStartElement("speak");
+				foreach (var mi in modifiedInput.Split(@"zyxwvu"))
+				{
+					if (mi.Trim().Length > 0)
+					{
+						xmlWriter.WriteElementString("s", mi);
+						xmlWriter.WriteStartElement("break");
+						xmlWriter.WriteAttributeString("time", "300ms");
+						xmlWriter.WriteEndElement();
+					}
+				}
+				xmlWriter.WriteEndElement();
+				xmlWriter.WriteEndDocument();
+			}
+			beautySSML.Replace("\r", "");
+			modifiedInput = ConvertAllToASCII(beautySSML.ToString());
+			var txtToConvert = textToConvert;
+			if (txtToConvert.Length > 620)
+			{
+				var truncatePoint = textToConvert.LastIndexOf(' ', 600);
+				txtToConvert = txtToConvert.Substring(0, truncatePoint) +" ...";
 			}
 			var retrunValue = new SimpleResponse
 			{
-				Ssml = beautySSML.ToString(),
-				DisplayText = textToConvert
-			};
+				Ssml = modifiedInput,				
+				DisplayText = txtToConvert
+			};						
 			return retrunValue;
 		}
 	}
